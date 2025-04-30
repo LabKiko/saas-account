@@ -22,7 +22,7 @@ func NewOrganizationHandler(orgService service.OrganizationService) *Organizatio
 }
 
 // Create 创建组织
-func (h *OrganizationHandler) Create(c *app.RequestContext) {
+func (h *OrganizationHandler) Create(ctx context.Context, c *app.RequestContext) {
 	var org model.Organization
 	if err := c.BindJSON(&org); err != nil {
 		BadRequest(c, "无效的请求参数")
@@ -53,7 +53,7 @@ func (h *OrganizationHandler) Create(c *app.RequestContext) {
 }
 
 // GetByID 根据ID获取组织
-func (h *OrganizationHandler) GetByID(c *app.RequestContext) {
+func (h *OrganizationHandler) GetByID(ctx context.Context, c *app.RequestContext) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
@@ -71,7 +71,7 @@ func (h *OrganizationHandler) GetByID(c *app.RequestContext) {
 }
 
 // List 获取组织列表
-func (h *OrganizationHandler) List(c *app.RequestContext) {
+func (h *OrganizationHandler) List(ctx context.Context, c *app.RequestContext) {
 	// 获取分页参数
 	pageStr := c.DefaultQuery("page", "1")
 	pageSizeStr := c.DefaultQuery("page_size", "10")
@@ -87,7 +87,7 @@ func (h *OrganizationHandler) List(c *app.RequestContext) {
 	}
 
 	// 获取组织列表
-	orgs, total, err := h.orgService.List(context.Background(), page, pageSize)
+	orgs, total, err := h.orgService.List(ctx, page, pageSize)
 	if err != nil {
 		InternalServerError(c, err.Error())
 		return
@@ -97,9 +97,9 @@ func (h *OrganizationHandler) List(c *app.RequestContext) {
 }
 
 // Update 更新组织
-func (h *OrganizationHandler) Update(c *app.RequestContext) {
+func (h *OrganizationHandler) Update(ctx context.Context, c *app.RequestContext) {
 	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 64)
+	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		BadRequest(c, "无效的组织ID")
 		return
@@ -112,16 +112,16 @@ func (h *OrganizationHandler) Update(c *app.RequestContext) {
 	}
 
 	// 设置组织ID
-	org.ID = uint(id)
+	org.ID = id
 
 	// 更新组织
-	if err := h.orgService.Update(context.Background(), &org); err != nil {
+	if err := h.orgService.Update(ctx, &org); err != nil {
 		Fail(c, 500, err.Error())
 		return
 	}
 
 	// 获取更新后的组织
-	updatedOrg, err := h.orgService.GetByID(context.Background(), uint(id))
+	updatedOrg, err := h.orgService.GetByID(ctx, uint(id))
 	if err != nil {
 		InternalServerError(c, err.Error())
 		return
@@ -131,15 +131,15 @@ func (h *OrganizationHandler) Update(c *app.RequestContext) {
 }
 
 // Delete 删除组织
-func (h *OrganizationHandler) Delete(c *app.RequestContext) {
+func (h *OrganizationHandler) Delete(ctx context.Context, c *app.RequestContext) {
 	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 64)
+	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		BadRequest(c, "无效的组织ID")
 		return
 	}
 
-	if err := h.orgService.Delete(context.Background(), uint(id)); err != nil {
+	if err := h.orgService.Delete(ctx, uint(id)); err != nil {
 		Fail(c, 500, err.Error())
 		return
 	}
@@ -148,7 +148,7 @@ func (h *OrganizationHandler) Delete(c *app.RequestContext) {
 }
 
 // GetMembers 获取组织成员列表
-func (h *OrganizationHandler) GetMembers(c *app.RequestContext) {
+func (h *OrganizationHandler) GetMembers(ctx context.Context, c *app.RequestContext) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
@@ -171,7 +171,7 @@ func (h *OrganizationHandler) GetMembers(c *app.RequestContext) {
 	}
 
 	// 获取组织成员列表
-	members, total, err := h.orgService.GetMembers(context.Background(), uint(id), page, pageSize)
+	members, total, err := h.orgService.GetMembers(ctx, uint(id), page, pageSize)
 	if err != nil {
 		InternalServerError(c, err.Error())
 		return
@@ -181,7 +181,7 @@ func (h *OrganizationHandler) GetMembers(c *app.RequestContext) {
 }
 
 // AddMember 添加组织成员
-func (h *OrganizationHandler) AddMember(c *app.RequestContext) {
+func (h *OrganizationHandler) AddMember(ctx context.Context, c *app.RequestContext) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
@@ -206,7 +206,7 @@ func (h *OrganizationHandler) AddMember(c *app.RequestContext) {
 	}
 
 	// 添加组织成员
-	if err := h.orgService.AddMember(context.Background(), uint(id), req.UserID, req.Role); err != nil {
+	if err := h.orgService.AddMember(ctx, uint(id), req.UserID, req.Role); err != nil {
 		Fail(c, 500, err.Error())
 		return
 	}
@@ -215,7 +215,7 @@ func (h *OrganizationHandler) AddMember(c *app.RequestContext) {
 }
 
 // UpdateMember 更新组织成员
-func (h *OrganizationHandler) UpdateMember(c *app.RequestContext) {
+func (h *OrganizationHandler) UpdateMember(ctx context.Context, c *app.RequestContext) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
@@ -240,7 +240,7 @@ func (h *OrganizationHandler) UpdateMember(c *app.RequestContext) {
 	}
 
 	// 更新组织成员
-	if err := h.orgService.UpdateMember(context.Background(), uint(id), uint(userID), req.Role); err != nil {
+	if err := h.orgService.UpdateMember(ctx, uint(id), uint(userID), req.Role); err != nil {
 		Fail(c, 500, err.Error())
 		return
 	}
@@ -249,7 +249,7 @@ func (h *OrganizationHandler) UpdateMember(c *app.RequestContext) {
 }
 
 // RemoveMember 移除组织成员
-func (h *OrganizationHandler) RemoveMember(c *app.RequestContext) {
+func (h *OrganizationHandler) RemoveMember(ctx context.Context, c *app.RequestContext) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
@@ -265,7 +265,7 @@ func (h *OrganizationHandler) RemoveMember(c *app.RequestContext) {
 	}
 
 	// 移除组织成员
-	if err := h.orgService.RemoveMember(context.Background(), uint(id), uint(userID)); err != nil {
+	if err := h.orgService.RemoveMember(ctx, uint(id), uint(userID)); err != nil {
 		Fail(c, 500, err.Error())
 		return
 	}

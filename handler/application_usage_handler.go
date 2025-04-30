@@ -23,7 +23,7 @@ func NewApplicationUsageHandler(usageService service.ApplicationUsageService) *A
 }
 
 // Create 创建应用使用记录
-func (h *ApplicationUsageHandler) Create(c *app.RequestContext) {
+func (h *ApplicationUsageHandler) Create(ctx context.Context, c *app.RequestContext) {
 	appIDStr := c.Param("app_id")
 	appID, err := strconv.ParseInt(appIDStr, 10, 64)
 	if err != nil {
@@ -47,7 +47,7 @@ func (h *ApplicationUsageHandler) Create(c *app.RequestContext) {
 	}
 
 	// 创建使用记录
-	if err := h.usageService.Create(context.Background(), &usage); err != nil {
+	if err := h.usageService.Create(ctx, &usage); err != nil {
 		Fail(c, 500, err.Error())
 		return
 	}
@@ -56,7 +56,7 @@ func (h *ApplicationUsageHandler) Create(c *app.RequestContext) {
 }
 
 // GetByID 根据ID获取应用使用记录
-func (h *ApplicationUsageHandler) GetByID(c *app.RequestContext) {
+func (h *ApplicationUsageHandler) GetByID(ctx context.Context, c *app.RequestContext) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
@@ -64,7 +64,7 @@ func (h *ApplicationUsageHandler) GetByID(c *app.RequestContext) {
 		return
 	}
 
-	usage, err := h.usageService.GetByID(context.Background(), uint(id))
+	usage, err := h.usageService.GetByID(ctx, uint(id))
 	if err != nil {
 		NotFound(c, "使用记录不存在")
 		return
@@ -74,7 +74,7 @@ func (h *ApplicationUsageHandler) GetByID(c *app.RequestContext) {
 }
 
 // List 获取应用使用记录列表
-func (h *ApplicationUsageHandler) List(c *app.RequestContext) {
+func (h *ApplicationUsageHandler) List(ctx context.Context, c *app.RequestContext) {
 	appIDStr := c.Param("app_id")
 	appID, err := strconv.ParseUint(appIDStr, 10, 64)
 	if err != nil {
@@ -117,10 +117,10 @@ func (h *ApplicationUsageHandler) List(c *app.RequestContext) {
 		// 将结束日期设置为当天的最后一秒
 		endDate = endDate.Add(24*time.Hour - time.Second)
 
-		usages, total, err = h.usageService.GetByApplicationAndDateRange(context.Background(), uint(appID), startDate, endDate, page, pageSize)
+		usages, total, err = h.usageService.GetByApplicationAndDateRange(ctx, uint(appID), startDate, endDate, page, pageSize)
 	} else {
 		// 否则查询所有记录
-		usages, total, err = h.usageService.GetByApplication(context.Background(), uint(appID), page, pageSize)
+		usages, total, err = h.usageService.GetByApplication(ctx, uint(appID), page, pageSize)
 	}
 
 	if err != nil {
@@ -132,7 +132,7 @@ func (h *ApplicationUsageHandler) List(c *app.RequestContext) {
 }
 
 // GetSummary 获取应用使用统计摘要
-func (h *ApplicationUsageHandler) GetSummary(c *app.RequestContext) {
+func (h *ApplicationUsageHandler) GetSummary(ctx context.Context, c *app.RequestContext) {
 	appIDStr := c.Param("app_id")
 	appID, err := strconv.ParseUint(appIDStr, 10, 64)
 	if err != nil {
@@ -163,7 +163,7 @@ func (h *ApplicationUsageHandler) GetSummary(c *app.RequestContext) {
 		endDate = endDate.Add(24*time.Hour - time.Second)
 	}
 
-	summary, err := h.usageService.GetSummaryByApplication(context.Background(), uint(appID), startDate, endDate)
+	summary, err := h.usageService.GetSummaryByApplication(ctx, uint(appID), startDate, endDate)
 	if err != nil {
 		InternalServerError(c, err.Error())
 		return
@@ -177,7 +177,7 @@ func (h *ApplicationUsageHandler) GetSummary(c *app.RequestContext) {
 }
 
 // RecordAPIUsage 记录API使用
-func (h *ApplicationUsageHandler) RecordAPIUsage(c *app.RequestContext) {
+func (h *ApplicationUsageHandler) RecordAPIUsage(ctx context.Context, c *app.RequestContext) {
 	appIDStr := c.Param("app_id")
 	appID, err := strconv.ParseUint(appIDStr, 10, 64)
 	if err != nil {
@@ -202,7 +202,7 @@ func (h *ApplicationUsageHandler) RecordAPIUsage(c *app.RequestContext) {
 	}
 
 	// 检查API限制
-	allowed, err := h.usageService.CheckAPILimit(context.Background(), uint(appID))
+	allowed, err := h.usageService.CheckAPILimit(ctx, uint(appID))
 	if err != nil {
 		InternalServerError(c, err.Error())
 		return
@@ -214,7 +214,7 @@ func (h *ApplicationUsageHandler) RecordAPIUsage(c *app.RequestContext) {
 	}
 
 	// 记录API使用
-	if err := h.usageService.RecordAPIUsage(context.Background(), uint(appID), req.UserID, req.Amount); err != nil {
+	if err := h.usageService.RecordAPIUsage(ctx, uint(appID), req.UserID, req.Amount); err != nil {
 		Fail(c, 500, err.Error())
 		return
 	}
@@ -223,7 +223,7 @@ func (h *ApplicationUsageHandler) RecordAPIUsage(c *app.RequestContext) {
 }
 
 // RecordStorageUsage 记录存储使用
-func (h *ApplicationUsageHandler) RecordStorageUsage(c *app.RequestContext) {
+func (h *ApplicationUsageHandler) RecordStorageUsage(ctx context.Context, c *app.RequestContext) {
 	appIDStr := c.Param("app_id")
 	appID, err := strconv.ParseUint(appIDStr, 10, 64)
 	if err != nil {
@@ -248,7 +248,7 @@ func (h *ApplicationUsageHandler) RecordStorageUsage(c *app.RequestContext) {
 	}
 
 	// 检查存储限制
-	allowed, err := h.usageService.CheckStorageLimit(context.Background(), uint(appID), req.Amount)
+	allowed, err := h.usageService.CheckStorageLimit(ctx, uint(appID), req.Amount)
 	if err != nil {
 		InternalServerError(c, err.Error())
 		return
@@ -260,7 +260,7 @@ func (h *ApplicationUsageHandler) RecordStorageUsage(c *app.RequestContext) {
 	}
 
 	// 记录存储使用
-	if err := h.usageService.RecordStorageUsage(context.Background(), uint(appID), req.UserID, req.Amount); err != nil {
+	if err := h.usageService.RecordStorageUsage(ctx, uint(appID), req.UserID, req.Amount); err != nil {
 		Fail(c, 500, err.Error())
 		return
 	}
@@ -269,7 +269,7 @@ func (h *ApplicationUsageHandler) RecordStorageUsage(c *app.RequestContext) {
 }
 
 // RecordFeatureUsage 记录功能使用
-func (h *ApplicationUsageHandler) RecordFeatureUsage(c *app.RequestContext) {
+func (h *ApplicationUsageHandler) RecordFeatureUsage(ctx context.Context, c *app.RequestContext) {
 	appIDStr := c.Param("app_id")
 	appID, err := strconv.ParseUint(appIDStr, 10, 64)
 	if err != nil {
@@ -295,7 +295,7 @@ func (h *ApplicationUsageHandler) RecordFeatureUsage(c *app.RequestContext) {
 	}
 
 	// 记录功能使用
-	if err := h.usageService.RecordFeatureUsage(context.Background(), uint(appID), req.UserID, req.FeatureName, req.Amount); err != nil {
+	if err := h.usageService.RecordFeatureUsage(ctx, uint(appID), req.UserID, req.FeatureName, req.Amount); err != nil {
 		Fail(c, 500, err.Error())
 		return
 	}

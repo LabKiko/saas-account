@@ -2,12 +2,10 @@ package handler
 
 import (
 	"context"
+	"github.com/cloudwego/hertz/pkg/app"
 	"saas-account/model"
 	"saas-account/service"
 	"strconv"
-	"time"
-
-	"github.com/cloudwego/hertz/pkg/app"
 )
 
 // OrganizationApplicationHandler 组织应用处理器
@@ -23,9 +21,9 @@ func NewOrganizationApplicationHandler(appService service.OrganizationApplicatio
 }
 
 // Create 创建组织应用
-func (h *OrganizationApplicationHandler) Create(c *app.RequestContext) {
+func (h *OrganizationApplicationHandler) Create(ctx context.Context, c *app.RequestContext) {
 	orgIDStr := c.Param("org_id")
-	orgID, err := strconv.ParseUint(orgIDStr, 10, 64)
+	orgID, err := strconv.ParseInt(orgIDStr, 10, 64)
 	if err != nil {
 		BadRequest(c, "无效的组织ID")
 		return
@@ -38,7 +36,7 @@ func (h *OrganizationApplicationHandler) Create(c *app.RequestContext) {
 	}
 
 	// 设置组织ID
-	app.OrganizationId = uint(orgID)
+	app.OrganizationId = orgID
 
 	// 验证必填字段
 	if app.Name == "" || app.Type == "" {
@@ -47,7 +45,7 @@ func (h *OrganizationApplicationHandler) Create(c *app.RequestContext) {
 	}
 
 	// 创建应用
-	if err := h.appService.Create(context.Background(), &app); err != nil {
+	if err := h.appService.Create(ctx, &app); err != nil {
 		Fail(c, 500, err.Error())
 		return
 	}
@@ -56,7 +54,7 @@ func (h *OrganizationApplicationHandler) Create(c *app.RequestContext) {
 }
 
 // GetByID 根据ID获取组织应用
-func (h *OrganizationApplicationHandler) GetByID(c *app.RequestContext) {
+func (h *OrganizationApplicationHandler) GetByID(ctx context.Context, c *app.RequestContext) {
 	orgIDStr := c.Param("org_id")
 	_, err := strconv.ParseUint(orgIDStr, 10, 64)
 	if err != nil {
@@ -71,7 +69,7 @@ func (h *OrganizationApplicationHandler) GetByID(c *app.RequestContext) {
 		return
 	}
 
-	app, err := h.appService.GetByID(context.Background(), uint(appID))
+	app, err := h.appService.GetByID(ctx, uint(appID))
 	if err != nil {
 		NotFound(c, "应用不存在")
 		return
@@ -84,7 +82,7 @@ func (h *OrganizationApplicationHandler) GetByID(c *app.RequestContext) {
 }
 
 // List 获取组织应用列表
-func (h *OrganizationApplicationHandler) List(c *app.RequestContext) {
+func (h *OrganizationApplicationHandler) List(ctx context.Context, c *app.RequestContext) {
 	orgIDStr := c.Param("org_id")
 	orgID, err := strconv.ParseUint(orgIDStr, 10, 64)
 	if err != nil {
@@ -107,7 +105,7 @@ func (h *OrganizationApplicationHandler) List(c *app.RequestContext) {
 	}
 
 	// 获取应用列表
-	apps, total, err := h.appService.GetByOrganization(context.Background(), uint(orgID), page, pageSize)
+	apps, total, err := h.appService.GetByOrganization(ctx, uint(orgID), page, pageSize)
 	if err != nil {
 		InternalServerError(c, err.Error())
 		return
@@ -122,9 +120,9 @@ func (h *OrganizationApplicationHandler) List(c *app.RequestContext) {
 }
 
 // Update 更新组织应用
-func (h *OrganizationApplicationHandler) Update(c *app.RequestContext) {
+func (h *OrganizationApplicationHandler) Update(ctx context.Context, c *app.RequestContext) {
 	orgIDStr := c.Param("org_id")
-	_, err := strconv.ParseUint(orgIDStr, 10, 64)
+	_, err := strconv.ParseInt(orgIDStr, 10, 64)
 	if err != nil {
 		BadRequest(c, "无效的组织ID")
 		return
@@ -144,16 +142,16 @@ func (h *OrganizationApplicationHandler) Update(c *app.RequestContext) {
 	}
 
 	// 设置应用ID
-	app.ID = uint(appID)
+	app.ID = int64(appID)
 
 	// 更新应用
-	if err := h.appService.Update(context.Background(), &app); err != nil {
+	if err := h.appService.Update(ctx, &app); err != nil {
 		Fail(c, 500, err.Error())
 		return
 	}
 
 	// 获取更新后的应用
-	updatedApp, err := h.appService.GetByID(context.Background(), uint(appID))
+	updatedApp, err := h.appService.GetByID(ctx, uint(appID))
 	if err != nil {
 		InternalServerError(c, err.Error())
 		return
@@ -166,7 +164,7 @@ func (h *OrganizationApplicationHandler) Update(c *app.RequestContext) {
 }
 
 // Delete 删除组织应用
-func (h *OrganizationApplicationHandler) Delete(c *app.RequestContext) {
+func (h *OrganizationApplicationHandler) Delete(ctx context.Context, c *app.RequestContext) {
 	orgIDStr := c.Param("org_id")
 	_, err := strconv.ParseUint(orgIDStr, 10, 64)
 	if err != nil {
@@ -181,7 +179,7 @@ func (h *OrganizationApplicationHandler) Delete(c *app.RequestContext) {
 		return
 	}
 
-	if err := h.appService.Delete(context.Background(), uint(appID)); err != nil {
+	if err := h.appService.Delete(ctx, uint(appID)); err != nil {
 		Fail(c, 500, err.Error())
 		return
 	}
@@ -190,7 +188,7 @@ func (h *OrganizationApplicationHandler) Delete(c *app.RequestContext) {
 }
 
 // RegenerateAppSecret 重新生成应用密钥
-func (h *OrganizationApplicationHandler) RegenerateAppSecret(c *app.RequestContext) {
+func (h *OrganizationApplicationHandler) RegenerateAppSecret(ctx context.Context, c *app.RequestContext) {
 	orgIDStr := c.Param("org_id")
 	_, err := strconv.ParseUint(orgIDStr, 10, 64)
 	if err != nil {
@@ -205,7 +203,7 @@ func (h *OrganizationApplicationHandler) RegenerateAppSecret(c *app.RequestConte
 		return
 	}
 
-	appSecret, err := h.appService.RegenerateAppSecret(context.Background(), uint(appID))
+	appSecret, err := h.appService.RegenerateAppSecret(ctx, uint(appID))
 	if err != nil {
 		Fail(c, 500, err.Error())
 		return
@@ -365,7 +363,7 @@ func (h *OrganizationApplicationHandler) GetLimit(c *app.RequestContext) {
 // SetLimit 设置应用限制
 func (h *OrganizationApplicationHandler) SetLimit(c *app.RequestContext) {
 	appIDStr := c.Param("app_id")
-	appID, err := strconv.ParseUint(appIDStr, 10, 64)
+	appID, err := strconv.ParseInt(appIDStr, 10, 64)
 	if err != nil {
 		BadRequest(c, "无效的应用ID")
 		return
@@ -378,7 +376,7 @@ func (h *OrganizationApplicationHandler) SetLimit(c *app.RequestContext) {
 	}
 
 	// 设置应用ID
-	limit.OrganizationApplicationId = uint(appID)
+	limit.OrganizationApplicationId = appID
 
 	// 设置应用限制
 	if err := h.appService.SetLimit(context.Background(), &limit); err != nil {
