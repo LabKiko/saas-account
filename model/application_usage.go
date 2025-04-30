@@ -3,7 +3,7 @@ package model
 // ApplicationUsage 应用使用记录模型，记录应用的使用情况
 type ApplicationUsage struct {
 	Base
-	ApplicationId  uint   `gorm:"not null;index" json:"application_id"`  // 组织应用ID
+	ApplicationId  int64  `gorm:"not null;index" json:"application_id"`  // 组织应用ID
 	UserId         *uint  `gorm:"index" json:"user_id"`                  // 用户ID，可为空表示系统操作
 	UsageType      string `gorm:"size:50;not null" json:"usage_type"`    // 使用类型：api_call, storage, feature
 	UsageAmount    int64  `gorm:"not null" json:"usage_amount"`          // 使用量
