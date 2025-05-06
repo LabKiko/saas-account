@@ -7,7 +7,6 @@ import (
 	"errors"
 	"saas-account/model"
 	"saas-account/repository"
-	"time"
 )
 
 // OrganizationApplicationService 组织应用服务接口
@@ -226,11 +225,11 @@ func (s *organizationApplicationService) AddMember(ctx context.Context, appID, u
 
 	// 添加应用成员
 	member := &model.OrganizationApplicationMember{
-		OrganizationApplicationId: appID,
-		UserId:                    userID,
-		Role:                      role,
-		Status:                    "active",
-		Permissions:               permissions,
+		ApplicationId: appID,
+		MemberId:      userID,
+		Role:          role,
+		Status:        "active",
+		Permissions:   permissions,
 	}
 
 	return s.appMemberRepo.Create(ctx, member)
