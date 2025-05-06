@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"saas-account/model"
 	"saas-account/repository"
 	"time"
@@ -11,17 +10,17 @@ import (
 // ApplicationUsageService 应用使用记录服务接口
 type ApplicationUsageService interface {
 	Create(ctx context.Context, usage *model.ApplicationUsage) error
-	GetByID(ctx context.Context, id uint) (*model.ApplicationUsage, error)
-	GetByApplication(ctx context.Context, appID uint, page, pageSize int) ([]model.ApplicationUsage, int64, error)
-	GetByApplicationAndDateRange(ctx context.Context, appID uint, startDate, endDate time.Time, page, pageSize int) ([]model.ApplicationUsage, int64, error)
-	GetByUser(ctx context.Context, userID uint, page, pageSize int) ([]model.ApplicationUsage, int64, error)
-	GetSummaryByApplication(ctx context.Context, appID uint, startDate, endDate time.Time) (map[string]int64, error)
-	Delete(ctx context.Context, id uint) error
-	RecordAPIUsage(ctx context.Context, appID uint, userID *uint, amount int64) error
-	RecordStorageUsage(ctx context.Context, appID uint, userID *uint, amount int64) error
-	RecordFeatureUsage(ctx context.Context, appID uint, userID *uint, featureName string, amount int64) error
-	CheckAPILimit(ctx context.Context, appID uint) (bool, error)
-	CheckStorageLimit(ctx context.Context, appID uint, additionalAmount int64) (bool, error)
+	GetByID(ctx context.Context, id int64) (*model.ApplicationUsage, error)
+	GetByApplication(ctx context.Context, appID int64, page, pageSize int) ([]model.ApplicationUsage, int64, error)
+	GetByApplicationAndDateRange(ctx context.Context, appID int64, startDate, endDate time.Time, page, pageSize int) ([]model.ApplicationUsage, int64, error)
+	GetByUser(ctx context.Context, userID int64, page, pageSize int) ([]model.ApplicationUsage, int64, error)
+	GetSummaryByApplication(ctx context.Context, appID int64, startDate, endDate time.Time) (map[string]int64, error)
+	Delete(ctx context.Context, id int64) error
+	RecordAPIUsage(ctx context.Context, appID int64, userID *int64, amount int64) error
+	RecordStorageUsage(ctx context.Context, appID int64, userID *int64, amount int64) error
+	RecordFeatureUsage(ctx context.Context, appID int64, userID *int64, featureName string, amount int64) error
+	CheckAPILimit(ctx context.Context, appID int64) (bool, error)
+	CheckStorageLimit(ctx context.Context, appID int64, additionalAmount int64) (bool, error)
 }
 
 // applicationUsageService 应用使用记录服务实现
@@ -47,27 +46,26 @@ func NewApplicationUsageService(
 // Create 创建应用使用记录
 func (s *applicationUsageService) Create(ctx context.Context, usage *model.ApplicationUsage) error {
 	// 检查应用是否存在
-	_, err := s.appRepo.GetByID(ctx, usage.OrganizationApplicationId)
+	_, err := s.appRepo.GetByID(ctx, usage.ApplicationId)
 	if err != nil {
 		return err
 	}
 
 	// 设置使用日期
-	if usage.UsageDate.IsZero() {
-		usage.UsageDate = time.Now()
-	}
+
+	usage.UsageDate = time.Now().Unix()
 
 	// 创建使用记录
 	return s.usageRepo.Create(ctx, usage)
 }
 
 // GetByID 根据ID获取应用使用记录
-func (s *applicationUsageService) GetByID(ctx context.Context, id uint) (*model.ApplicationUsage, error) {
+func (s *applicationUsageService) GetByID(ctx context.Context, id int64) (*model.ApplicationUsage, error) {
 	return s.usageRepo.GetByID(ctx, id)
 }
 
 // GetByApplication 根据应用ID获取使用记录
-func (s *applicationUsageService) GetByApplication(ctx context.Context, appID uint, page, pageSize int) ([]model.ApplicationUsage, int64, error) {
+func (s *applicationUsageService) GetByApplication(ctx context.Context, appID int64, page, pageSize int) ([]model.ApplicationUsage, int64, error) {
 	// 检查应用是否存在
 	_, err := s.appRepo.GetByID(ctx, appID)
 	if err != nil {
@@ -78,7 +76,7 @@ func (s *applicationUsageService) GetByApplication(ctx context.Context, appID ui
 }
 
 // GetByApplicationAndDateRange 根据应用ID和日期范围获取使用记录
-func (s *applicationUsageService) GetByApplicationAndDateRange(ctx context.Context, appID uint, startDate, endDate time.Time, page, pageSize int) ([]model.ApplicationUsage, int64, error) {
+func (s *applicationUsageService) GetByApplicationAndDateRange(ctx context.Context, appID int64, startDate, endDate time.Time, page, pageSize int) ([]model.ApplicationUsage, int64, error) {
 	// 检查应用是否存在
 	_, err := s.appRepo.GetByID(ctx, appID)
 	if err != nil {
@@ -89,12 +87,12 @@ func (s *applicationUsageService) GetByApplicationAndDateRange(ctx context.Conte
 }
 
 // GetByUser 根据用户ID获取使用记录
-func (s *applicationUsageService) GetByUser(ctx context.Context, userID uint, page, pageSize int) ([]model.ApplicationUsage, int64, error) {
+func (s *applicationUsageService) GetByUser(ctx context.Context, userID int64, page, pageSize int) ([]model.ApplicationUsage, int64, error) {
 	return s.usageRepo.GetByUser(ctx, userID, page, pageSize)
 }
 
 // GetSummaryByApplication 获取应用使用统计摘要
-func (s *applicationUsageService) GetSummaryByApplication(ctx context.Context, appID uint, startDate, endDate time.Time) (map[string]int64, error) {
+func (s *applicationUsageService) GetSummaryByApplication(ctx context.Context, appID int64, startDate, endDate time.Time) (map[string]int64, error) {
 	// 检查应用是否存在
 	_, err := s.appRepo.GetByID(ctx, appID)
 	if err != nil {
@@ -105,12 +103,12 @@ func (s *applicationUsageService) GetSummaryByApplication(ctx context.Context, a
 }
 
 // Delete 删除应用使用记录
-func (s *applicationUsageService) Delete(ctx context.Context, id uint) error {
+func (s *applicationUsageService) Delete(ctx context.Context, id int64) error {
 	return s.usageRepo.Delete(ctx, id)
 }
 
 // RecordAPIUsage 记录API使用
-func (s *applicationUsageService) RecordAPIUsage(ctx context.Context, appID uint, userID *uint, amount int64) error {
+func (s *applicationUsageService) RecordAPIUsage(ctx context.Context, appID int64, userID *int64, amount int64) error {
 	// 检查应用是否存在
 	_, err := s.appRepo.GetByID(ctx, appID)
 	if err != nil {
@@ -119,19 +117,19 @@ func (s *applicationUsageService) RecordAPIUsage(ctx context.Context, appID uint
 
 	// 创建使用记录
 	usage := &model.ApplicationUsage{
-		OrganizationApplicationId: appID,
-		UserId:                    userID,
-		UsageType:                 "api_call",
-		UsageAmount:               amount,
-		UsageDate:                 time.Now(),
-		Details:                   "{}",
+		ApplicationId: appID,
+		UserId:        userID,
+		UsageType:     "api_call",
+		UsageAmount:   amount,
+		UsageDate:     time.Now().Unix(),
+		Details:       "{}",
 	}
 
 	return s.usageRepo.Create(ctx, usage)
 }
 
 // RecordStorageUsage 记录存储使用
-func (s *applicationUsageService) RecordStorageUsage(ctx context.Context, appID uint, userID *uint, amount int64) error {
+func (s *applicationUsageService) RecordStorageUsage(ctx context.Context, appID int64, userID *int64, amount int64) error {
 	// 检查应用是否存在
 	_, err := s.appRepo.GetByID(ctx, appID)
 	if err != nil {
@@ -140,19 +138,19 @@ func (s *applicationUsageService) RecordStorageUsage(ctx context.Context, appID 
 
 	// 创建使用记录
 	usage := &model.ApplicationUsage{
-		OrganizationApplicationId: appID,
-		UserId:                    userID,
-		UsageType:                 "storage",
-		UsageAmount:               amount,
-		UsageDate:                 time.Now(),
-		Details:                   "{}",
+		ApplicationId: appID,
+		UserId:        userID,
+		UsageType:     "storage",
+		UsageAmount:   amount,
+		UsageDate:     time.Now().Unix(),
+		Details:       "{}",
 	}
 
 	return s.usageRepo.Create(ctx, usage)
 }
 
 // RecordFeatureUsage 记录功能使用
-func (s *applicationUsageService) RecordFeatureUsage(ctx context.Context, appID uint, userID *uint, featureName string, amount int64) error {
+func (s *applicationUsageService) RecordFeatureUsage(ctx context.Context, appID int64, userID *int64, featureName string, amount int64) error {
 	// 检查应用是否存在
 	_, err := s.appRepo.GetByID(ctx, appID)
 	if err != nil {
@@ -173,7 +171,7 @@ func (s *applicationUsageService) RecordFeatureUsage(ctx context.Context, appID 
 }
 
 // CheckAPILimit 检查API限制
-func (s *applicationUsageService) CheckAPILimit(ctx context.Context, appID uint) (bool, error) {
+func (s *applicationUsageService) CheckAPILimit(ctx context.Context, appID int64) (bool, error) {
 	// 获取应用限制
 	limit, err := s.limitRepo.GetByApplicationID(ctx, appID)
 	if err != nil {
@@ -194,7 +192,7 @@ func (s *applicationUsageService) CheckAPILimit(ctx context.Context, appID uint)
 }
 
 // CheckStorageLimit 检查存储限制
-func (s *applicationUsageService) CheckStorageLimit(ctx context.Context, appID uint, additionalAmount int64) (bool, error) {
+func (s *applicationUsageService) CheckStorageLimit(ctx context.Context, appID int64, additionalAmount int64) (bool, error) {
 	// 获取应用限制
 	limit, err := s.limitRepo.GetByApplicationID(ctx, appID)
 	if err != nil {

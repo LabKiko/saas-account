@@ -1,19 +1,20 @@
 package repository
 
 import (
+	"context"
 	"saas-account/config"
 	"saas-account/model"
 )
 
 // OrganizationApplicationRepository 组织应用仓库接口
 type OrganizationApplicationRepository interface {
-	Create(app *model.OrganizationApplication) error
-	GetByID(id uint) (*model.OrganizationApplication, error)
-	GetByAppKey(appKey string) (*model.OrganizationApplication, error)
-	GetByOrganization(orgID uint, page, pageSize int) ([]model.OrganizationApplication, int64, error)
-	List(page, pageSize int) ([]model.OrganizationApplication, int64, error)
-	Update(app *model.OrganizationApplication) error
-	Delete(id uint) error
+	Create(ctx context.Context, app *model.OrganizationApplication) error
+	GetByID(ctx context.Context, id int64) (*model.OrganizationApplication, error)
+	GetByAppKey(ctx context.Context, appKey string) (*model.OrganizationApplication, error)
+	GetByOrganization(ctx context.Context, orgID int64, page, pageSize int) ([]model.OrganizationApplication, int64, error)
+	List(ctx context.Context, page, pageSize int) ([]model.OrganizationApplication, int64, error)
+	Update(ctx context.Context, app *model.OrganizationApplication) error
+	Delete(ctx context.Context, id int64) error
 }
 
 // organizationApplicationRepository 组织应用仓库实现
@@ -25,14 +26,14 @@ func NewOrganizationApplicationRepository() OrganizationApplicationRepository {
 }
 
 // Create 创建组织应用
-func (r *organizationApplicationRepository) Create(app *model.OrganizationApplication) error {
-	return config.DB.Create(app).Error
+func (r *organizationApplicationRepository) Create(ctx context.Context, app *model.OrganizationApplication) error {
+	return config.DB.WithContext(ctx).Create(app).Error
 }
 
 // GetByID 根据ID获取组织应用
-func (r *organizationApplicationRepository) GetByID(id uint) (*model.OrganizationApplication, error) {
+func (r *organizationApplicationRepository) GetByID(ctx context.Context, id int64) (*model.OrganizationApplication, error) {
 	var app model.OrganizationApplication
-	err := config.DB.First(&app, id).Error
+	err := config.DB.WithContext(ctx).First(&app, id).Error
 	if err != nil {
 		return nil, err
 	}
@@ -40,9 +41,9 @@ func (r *organizationApplicationRepository) GetByID(id uint) (*model.Organizatio
 }
 
 // GetByAppKey 根据AppKey获取组织应用
-func (r *organizationApplicationRepository) GetByAppKey(appKey string) (*model.OrganizationApplication, error) {
+func (r *organizationApplicationRepository) GetByAppKey(ctx context.Context, appKey string) (*model.OrganizationApplication, error) {
 	var app model.OrganizationApplication
-	err := config.DB.Where("app_key = ?", appKey).First(&app).Error
+	err := config.DB.WithContext(ctx).Where("app_key = ?", appKey).First(&app).Error
 	if err != nil {
 		return nil, err
 	}
@@ -50,20 +51,20 @@ func (r *organizationApplicationRepository) GetByAppKey(appKey string) (*model.O
 }
 
 // GetByOrganization 根据组织ID获取应用列表
-func (r *organizationApplicationRepository) GetByOrganization(orgID uint, page, pageSize int) ([]model.OrganizationApplication, int64, error) {
+func (r *organizationApplicationRepository) GetByOrganization(ctx context.Context, orgID int64, page, pageSize int) ([]model.OrganizationApplication, int64, error) {
 	var apps []model.OrganizationApplication
 	var total int64
 
 	offset := (page - 1) * pageSize
 
 	// 获取总数
-	err := config.DB.Model(&model.OrganizationApplication{}).Where("organization_id = ?", orgID).Count(&total).Error
+	err := config.DB.WithContext(ctx).Model(&model.OrganizationApplication{}).Where("organization_id = ?", orgID).Count(&total).Error
 	if err != nil {
 		return nil, 0, err
 	}
 
 	// 获取分页数据
-	err = config.DB.Where("organization_id = ?", orgID).
+	err = config.DB.WithContext(ctx).Where("organization_id = ?", orgID).
 		Offset(offset).Limit(pageSize).
 		Find(&apps).Error
 	if err != nil {
@@ -74,20 +75,20 @@ func (r *organizationApplicationRepository) GetByOrganization(orgID uint, page, 
 }
 
 // List 获取应用列表
-func (r *organizationApplicationRepository) List(page, pageSize int) ([]model.OrganizationApplication, int64, error) {
+func (r *organizationApplicationRepository) List(ctx context.Context, page, pageSize int) ([]model.OrganizationApplication, int64, error) {
 	var apps []model.OrganizationApplication
 	var total int64
 
 	offset := (page - 1) * pageSize
 
 	// 获取总数
-	err := config.DB.Model(&model.OrganizationApplication{}).Count(&total).Error
+	err := config.DB.WithContext(ctx).Model(&model.OrganizationApplication{}).Count(&total).Error
 	if err != nil {
 		return nil, 0, err
 	}
 
 	// 获取分页数据
-	err = config.DB.Offset(offset).Limit(pageSize).Find(&apps).Error
+	err = config.DB.WithContext(ctx).Offset(offset).Limit(pageSize).Find(&apps).Error
 	if err != nil {
 		return nil, 0, err
 	}
@@ -96,11 +97,11 @@ func (r *organizationApplicationRepository) List(page, pageSize int) ([]model.Or
 }
 
 // Update 更新组织应用
-func (r *organizationApplicationRepository) Update(app *model.OrganizationApplication) error {
-	return config.DB.Save(app).Error
+func (r *organizationApplicationRepository) Update(ctx context.Context, app *model.OrganizationApplication) error {
+	return config.DB.WithContext(ctx).Save(app).Error
 }
 
 // Delete 删除组织应用（软删除）
-func (r *organizationApplicationRepository) Delete(id uint) error {
-	return config.DB.Delete(&model.OrganizationApplication{}, id).Error
+func (r *organizationApplicationRepository) Delete(ctx context.Context, id int64) error {
+	return config.DB.WithContext(ctx).Delete(&model.OrganizationApplication{}, id).Error
 }

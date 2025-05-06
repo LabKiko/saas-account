@@ -9,23 +9,23 @@ import (
 
 // OrganizationService 组织服务接口
 type OrganizationService interface {
-	Create(ctx context.Context, org *model.Organization, creatorID uint) error
-	GetByID(ctx context.Context, id uint) (*model.Organization, error)
-	GetByOwnerID(ctx context.Context, ownerID uint) ([]model.Organization, error)
+	Create(ctx context.Context, org *model.Organization, creatorID int64) error
+	GetByID(ctx context.Context, id int64) (*model.Organization, error)
+	GetByOwnerID(ctx context.Context, ownerID int64) ([]model.Organization, error)
 	List(ctx context.Context, page, pageSize int) ([]model.Organization, int64, error)
 	Update(ctx context.Context, org *model.Organization) error
-	Delete(ctx context.Context, id uint) error
-	AddMember(ctx context.Context, orgID, userID uint, role string) error
-	RemoveMember(ctx context.Context, orgID, userID uint) error
-	GetMembers(ctx context.Context, orgID uint, page, pageSize int) ([]model.OrganizationMember, int64, error)
-	UpdateMember(ctx context.Context, orgID, userID uint, role string) error
+	Delete(ctx context.Context, id int64) error
+	AddMember(ctx context.Context, orgID, userID int64, role string) error
+	RemoveMember(ctx context.Context, orgID, userID int64) error
+	GetMembers(ctx context.Context, orgID int64, page, pageSize int) ([]model.OrganizationMember, int64, error)
+	UpdateMember(ctx context.Context, orgID, userID int64, role string) error
 }
 
 // organizationService 组织服务实现
 type organizationService struct {
-	orgRepo     repository.OrganizationRepository
+	orgRepo       repository.OrganizationRepository
 	orgMemberRepo repository.OrganizationMemberRepository
-	userRepo    repository.UserRepository
+	userRepo      repository.UserRepository
 }
 
 // NewOrganizationService 创建组织服务
@@ -35,14 +35,14 @@ func NewOrganizationService(
 	userRepo repository.UserRepository,
 ) OrganizationService {
 	return &organizationService{
-		orgRepo:     orgRepo,
+		orgRepo:       orgRepo,
 		orgMemberRepo: orgMemberRepo,
-		userRepo:    userRepo,
+		userRepo:      userRepo,
 	}
 }
 
 // Create 创建组织
-func (s *organizationService) Create(ctx context.Context, org *model.Organization, creatorID uint) error {
+func (s *organizationService) Create(ctx context.Context, org *model.Organization, creatorID int64) error {
 	// 检查创建者是否存在
 	creator, err := s.userRepo.GetByID(ctx, creatorID)
 	if err != nil {
@@ -74,12 +74,12 @@ func (s *organizationService) Create(ctx context.Context, org *model.Organizatio
 }
 
 // GetByID 根据ID获取组织
-func (s *organizationService) GetByID(ctx context.Context, id uint) (*model.Organization, error) {
+func (s *organizationService) GetByID(ctx context.Context, id int64) (*model.Organization, error) {
 	return s.orgRepo.GetByID(ctx, id)
 }
 
 // GetByOwnerID 根据拥有者ID获取组织列表
-func (s *organizationService) GetByOwnerID(ctx context.Context, ownerID uint) ([]model.Organization, error) {
+func (s *organizationService) GetByOwnerID(ctx context.Context, ownerID int64) ([]model.Organization, error) {
 	return s.orgRepo.GetByOwnerID(ctx, ownerID)
 }
 
@@ -104,12 +104,12 @@ func (s *organizationService) Update(ctx context.Context, org *model.Organizatio
 }
 
 // Delete 删除组织
-func (s *organizationService) Delete(ctx context.Context, id uint) error {
+func (s *organizationService) Delete(ctx context.Context, id int64) error {
 	return s.orgRepo.Delete(ctx, id)
 }
 
 // AddMember 添加组织成员
-func (s *organizationService) AddMember(ctx context.Context, orgID, userID uint, role string) error {
+func (s *organizationService) AddMember(ctx context.Context, orgID, userID int64, role string) error {
 	// 检查组织是否存在
 	_, err := s.orgRepo.GetByID(ctx, orgID)
 	if err != nil {
@@ -145,7 +145,7 @@ func (s *organizationService) AddMember(ctx context.Context, orgID, userID uint,
 }
 
 // RemoveMember 移除组织成员
-func (s *organizationService) RemoveMember(ctx context.Context, orgID, userID uint) error {
+func (s *organizationService) RemoveMember(ctx context.Context, orgID, userID int64) error {
 	// 检查组织是否存在
 	org, err := s.orgRepo.GetByID(ctx, orgID)
 	if err != nil {
@@ -162,7 +162,7 @@ func (s *organizationService) RemoveMember(ctx context.Context, orgID, userID ui
 }
 
 // GetMembers 获取组织成员列表
-func (s *organizationService) GetMembers(ctx context.Context, orgID uint, page, pageSize int) ([]model.OrganizationMember, int64, error) {
+func (s *organizationService) GetMembers(ctx context.Context, orgID int64, page, pageSize int) ([]model.OrganizationMember, int64, error) {
 	// 检查组织是否存在
 	_, err := s.orgRepo.GetByID(ctx, orgID)
 	if err != nil {
@@ -173,7 +173,7 @@ func (s *organizationService) GetMembers(ctx context.Context, orgID uint, page, 
 }
 
 // UpdateMember 更新组织成员
-func (s *organizationService) UpdateMember(ctx context.Context, orgID, userID uint, role string) error {
+func (s *organizationService) UpdateMember(ctx context.Context, orgID, userID int64, role string) error {
 	// 检查组织是否存在
 	org, err := s.orgRepo.GetByID(ctx, orgID)
 	if err != nil {

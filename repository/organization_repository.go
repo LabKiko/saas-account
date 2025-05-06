@@ -9,11 +9,11 @@ import (
 // OrganizationRepository 组织仓库接口
 type OrganizationRepository interface {
 	Create(ctx context.Context, org *model.Organization) error
-	GetByID(ctx context.Context, id uint) (*model.Organization, error)
-	GetByOwnerID(ctx context.Context, ownerID uint) ([]model.Organization, error)
+	GetByID(ctx context.Context, id int64) (*model.Organization, error)
+	GetByOwnerID(ctx context.Context, ownerID int64) ([]model.Organization, error)
 	List(ctx context.Context, page, pageSize int) ([]model.Organization, int64, error)
 	Update(ctx context.Context, org *model.Organization) error
-	Delete(ctx context.Context, id uint) error
+	Delete(ctx context.Context, id int64) error
 }
 
 // organizationRepository 组织仓库实现
@@ -30,7 +30,7 @@ func (r *organizationRepository) Create(ctx context.Context, org *model.Organiza
 }
 
 // GetByID 根据ID获取组织
-func (r *organizationRepository) GetByID(ctx context.Context, id uint) (*model.Organization, error) {
+func (r *organizationRepository) GetByID(ctx context.Context, id int64) (*model.Organization, error) {
 	var org model.Organization
 	err := config.DB.WithContext(ctx).First(&org, id).Error
 	if err != nil {
@@ -40,7 +40,7 @@ func (r *organizationRepository) GetByID(ctx context.Context, id uint) (*model.O
 }
 
 // GetByOwnerID 根据拥有者ID获取组织列表
-func (r *organizationRepository) GetByOwnerID(ctx context.Context, ownerID uint) ([]model.Organization, error) {
+func (r *organizationRepository) GetByOwnerID(ctx context.Context, ownerID int64) ([]model.Organization, error) {
 	var orgs []model.Organization
 	err := config.DB.WithContext(ctx).Where("owner_id = ?", ownerID).Find(&orgs).Error
 	if err != nil {
@@ -77,6 +77,6 @@ func (r *organizationRepository) Update(ctx context.Context, org *model.Organiza
 }
 
 // Delete 删除组织（软删除）
-func (r *organizationRepository) Delete(ctx context.Context, id uint) error {
+func (r *organizationRepository) Delete(ctx context.Context, id int64) error {
 	return config.DB.WithContext(ctx).Delete(&model.Organization{}, id).Error
 }

@@ -13,28 +13,28 @@ import (
 // OrganizationApplicationService 组织应用服务接口
 type OrganizationApplicationService interface {
 	Create(ctx context.Context, app *model.OrganizationApplication) error
-	GetByID(ctx context.Context, id uint) (*model.OrganizationApplication, error)
+	GetByID(ctx context.Context, id int64) (*model.OrganizationApplication, error)
 	GetByAppKey(ctx context.Context, appKey string) (*model.OrganizationApplication, error)
-	GetByOrganization(ctx context.Context, orgID uint, page, pageSize int) ([]model.OrganizationApplication, int64, error)
+	GetByOrganization(ctx context.Context, orgID int64, page, pageSize int) ([]model.OrganizationApplication, int64, error)
 	List(ctx context.Context, page, pageSize int) ([]model.OrganizationApplication, int64, error)
 	Update(ctx context.Context, app *model.OrganizationApplication) error
-	Delete(ctx context.Context, id uint) error
-	RegenerateAppSecret(ctx context.Context, id uint) (string, error)
-	AddMember(ctx context.Context, appID, userID uint, role string, permissions string) error
-	RemoveMember(ctx context.Context, appID, userID uint) error
-	GetMembers(ctx context.Context, appID uint, page, pageSize int) ([]model.OrganizationApplicationMember, int64, error)
-	UpdateMember(ctx context.Context, appID, userID uint, role string, permissions string) error
+	Delete(ctx context.Context, id int64) error
+	RegenerateAppSecret(ctx context.Context, id int64) (string, error)
+	AddMember(ctx context.Context, appID, userID int64, role string, permissions string) error
+	RemoveMember(ctx context.Context, appID, userID int64) error
+	GetMembers(ctx context.Context, appID int64, page, pageSize int) ([]model.OrganizationApplicationMember, int64, error)
+	UpdateMember(ctx context.Context, appID, userID int64, role string, permissions string) error
 	SetLimit(ctx context.Context, limit *model.OrganizationApplicationLimit) error
-	GetLimit(ctx context.Context, appID uint) (*model.OrganizationApplicationLimit, error)
+	GetLimit(ctx context.Context, appID int64) (*model.OrganizationApplicationLimit, error)
 }
 
 // organizationApplicationService 组织应用服务实现
 type organizationApplicationService struct {
-	appRepo     repository.OrganizationApplicationRepository
+	appRepo       repository.OrganizationApplicationRepository
 	appMemberRepo repository.OrganizationApplicationMemberRepository
-	appLimitRepo repository.OrganizationApplicationLimitRepository
-	orgRepo     repository.OrganizationRepository
-	userRepo    repository.UserRepository
+	appLimitRepo  repository.OrganizationApplicationLimitRepository
+	orgRepo       repository.OrganizationRepository
+	userRepo      repository.UserRepository
 }
 
 // NewOrganizationApplicationService 创建组织应用服务
@@ -46,11 +46,11 @@ func NewOrganizationApplicationService(
 	userRepo repository.UserRepository,
 ) OrganizationApplicationService {
 	return &organizationApplicationService{
-		appRepo:     appRepo,
+		appRepo:       appRepo,
 		appMemberRepo: appMemberRepo,
-		appLimitRepo: appLimitRepo,
-		orgRepo:     orgRepo,
-		userRepo:    userRepo,
+		appLimitRepo:  appLimitRepo,
+		orgRepo:       orgRepo,
+		userRepo:      userRepo,
 	}
 }
 
@@ -107,20 +107,20 @@ func (s *organizationApplicationService) Create(ctx context.Context, app *model.
 	// 创建默认应用限制
 	limit := &model.OrganizationApplicationLimit{
 		OrganizationApplicationId: app.ID,
-		PlanName:                 "free",
-		MaxUsers:                 5,
-		MaxStorage:               1073741824, // 1GB
-		MaxRequests:              10000,      // 每天10000请求
-		Features:                 "{}",       // 空特性
-		ExpiresAt:                nil,        // 永不过期
-		AutoRenew:                false,
+		PlanName:                  "free",
+		MaxUsers:                  5,
+		MaxStorage:                1073741824, // 1GB
+		MaxRequests:               10000,      // 每天10000请求
+		Features:                  "{}",       // 空特性
+		ExpiresAt:                 0,          // 永不过期
+		AutoRenew:                 false,
 	}
 
 	return s.appLimitRepo.Create(ctx, limit)
 }
 
 // GetByID 根据ID获取组织应用
-func (s *organizationApplicationService) GetByID(ctx context.Context, id uint) (*model.OrganizationApplication, error) {
+func (s *organizationApplicationService) GetByID(ctx context.Context, id int64) (*model.OrganizationApplication, error) {
 	return s.appRepo.GetByID(ctx, id)
 }
 
@@ -130,7 +130,7 @@ func (s *organizationApplicationService) GetByAppKey(ctx context.Context, appKey
 }
 
 // GetByOrganization 根据组织ID获取应用列表
-func (s *organizationApplicationService) GetByOrganization(ctx context.Context, orgID uint, page, pageSize int) ([]model.OrganizationApplication, int64, error) {
+func (s *organizationApplicationService) GetByOrganization(ctx context.Context, orgID int64, page, pageSize int) ([]model.OrganizationApplication, int64, error) {
 	// 检查组织是否存在
 	_, err := s.orgRepo.GetByID(ctx, orgID)
 	if err != nil {
@@ -163,12 +163,12 @@ func (s *organizationApplicationService) Update(ctx context.Context, app *model.
 }
 
 // Delete 删除组织应用
-func (s *organizationApplicationService) Delete(ctx context.Context, id uint) error {
+func (s *organizationApplicationService) Delete(ctx context.Context, id int64) error {
 	return s.appRepo.Delete(ctx, id)
 }
 
 // RegenerateAppSecret 重新生成应用密钥
-func (s *organizationApplicationService) RegenerateAppSecret(ctx context.Context, id uint) (string, error) {
+func (s *organizationApplicationService) RegenerateAppSecret(ctx context.Context, id int64) (string, error) {
 	// 获取现有应用
 	app, err := s.appRepo.GetByID(ctx, id)
 	if err != nil {
@@ -191,7 +191,7 @@ func (s *organizationApplicationService) RegenerateAppSecret(ctx context.Context
 }
 
 // AddMember 添加应用成员
-func (s *organizationApplicationService) AddMember(ctx context.Context, appID, userID uint, role string, permissions string) error {
+func (s *organizationApplicationService) AddMember(ctx context.Context, appID, userID int64, role string, permissions string) error {
 	// 检查应用是否存在
 	app, err := s.appRepo.GetByID(ctx, appID)
 	if err != nil {
@@ -227,17 +227,17 @@ func (s *organizationApplicationService) AddMember(ctx context.Context, appID, u
 	// 添加应用成员
 	member := &model.OrganizationApplicationMember{
 		OrganizationApplicationId: appID,
-		UserId:                   userID,
-		Role:                     role,
-		Status:                   "active",
-		Permissions:              permissions,
+		UserId:                    userID,
+		Role:                      role,
+		Status:                    "active",
+		Permissions:               permissions,
 	}
 
 	return s.appMemberRepo.Create(ctx, member)
 }
 
 // RemoveMember 移除应用成员
-func (s *organizationApplicationService) RemoveMember(ctx context.Context, appID, userID uint) error {
+func (s *organizationApplicationService) RemoveMember(ctx context.Context, appID, userID int64) error {
 	// 检查应用是否存在
 	_, err := s.appRepo.GetByID(ctx, appID)
 	if err != nil {
@@ -249,7 +249,7 @@ func (s *organizationApplicationService) RemoveMember(ctx context.Context, appID
 }
 
 // GetMembers 获取应用成员列表
-func (s *organizationApplicationService) GetMembers(ctx context.Context, appID uint, page, pageSize int) ([]model.OrganizationApplicationMember, int64, error) {
+func (s *organizationApplicationService) GetMembers(ctx context.Context, appID int64, page, pageSize int) ([]model.OrganizationApplicationMember, int64, error) {
 	// 检查应用是否存在
 	_, err := s.appRepo.GetByID(ctx, appID)
 	if err != nil {
@@ -260,7 +260,7 @@ func (s *organizationApplicationService) GetMembers(ctx context.Context, appID u
 }
 
 // UpdateMember 更新应用成员
-func (s *organizationApplicationService) UpdateMember(ctx context.Context, appID, userID uint, role string, permissions string) error {
+func (s *organizationApplicationService) UpdateMember(ctx context.Context, appID, userID int64, role string, permissions string) error {
 	// 检查应用是否存在
 	_, err := s.appRepo.GetByID(ctx, appID)
 	if err != nil {
@@ -305,7 +305,7 @@ func (s *organizationApplicationService) SetLimit(ctx context.Context, limit *mo
 }
 
 // GetLimit 获取应用限制
-func (s *organizationApplicationService) GetLimit(ctx context.Context, appID uint) (*model.OrganizationApplicationLimit, error) {
+func (s *organizationApplicationService) GetLimit(ctx context.Context, appID int64) (*model.OrganizationApplicationLimit, error) {
 	// 检查应用是否存在
 	_, err := s.appRepo.GetByID(ctx, appID)
 	if err != nil {

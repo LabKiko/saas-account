@@ -343,7 +343,7 @@ func (h *OrganizationApplicationHandler) RemoveMember(c *app.RequestContext) {
 }
 
 // GetLimit 获取应用限制
-func (h *OrganizationApplicationHandler) GetLimit(c *app.RequestContext) {
+func (h *OrganizationApplicationHandler) GetLimit(ctx context.Context, c *app.RequestContext) {
 	appIDStr := c.Param("app_id")
 	appID, err := strconv.ParseUint(appIDStr, 10, 64)
 	if err != nil {
@@ -351,7 +351,7 @@ func (h *OrganizationApplicationHandler) GetLimit(c *app.RequestContext) {
 		return
 	}
 
-	limit, err := h.appService.GetLimit(context.Background(), uint(appID))
+	limit, err := h.appService.GetLimit(ctx, uint(appID))
 	if err != nil {
 		NotFound(c, "应用限制不存在")
 		return
@@ -361,7 +361,7 @@ func (h *OrganizationApplicationHandler) GetLimit(c *app.RequestContext) {
 }
 
 // SetLimit 设置应用限制
-func (h *OrganizationApplicationHandler) SetLimit(c *app.RequestContext) {
+func (h *OrganizationApplicationHandler) SetLimit(ctx context.Context, c *app.RequestContext) {
 	appIDStr := c.Param("app_id")
 	appID, err := strconv.ParseInt(appIDStr, 10, 64)
 	if err != nil {
@@ -379,7 +379,7 @@ func (h *OrganizationApplicationHandler) SetLimit(c *app.RequestContext) {
 	limit.OrganizationApplicationId = appID
 
 	// 设置应用限制
-	if err := h.appService.SetLimit(context.Background(), &limit); err != nil {
+	if err := h.appService.SetLimit(ctx, &limit); err != nil {
 		Fail(c, 500, err.Error())
 		return
 	}

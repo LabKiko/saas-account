@@ -9,12 +9,12 @@ import (
 // UserRepository 用户仓库接口
 type UserRepository interface {
 	Create(ctx context.Context, user *model.User) error
-	GetByID(ctx context.Context, id uint) (*model.User, error)
+	GetByID(ctx context.Context, id int64) (*model.User, error)
 	GetByEmail(ctx context.Context, email string) (*model.User, error)
 	GetByPhone(ctx context.Context, phone string) (*model.User, error)
 	List(ctx context.Context, page, pageSize int) ([]model.User, int64, error)
 	Update(ctx context.Context, user *model.User) error
-	Delete(ctx context.Context, id uint) error
+	Delete(ctx context.Context, id int64) error
 }
 
 // userRepository 用户仓库实现
@@ -31,7 +31,7 @@ func (r *userRepository) Create(ctx context.Context, user *model.User) error {
 }
 
 // GetByID 根据ID获取用户
-func (r *userRepository) GetByID(ctx context.Context, id uint) (*model.User, error) {
+func (r *userRepository) GetByID(ctx context.Context, id int64) (*model.User, error) {
 	var user model.User
 	err := config.DB.WithContext(ctx).First(&user, id).Error
 	if err != nil {
@@ -88,6 +88,6 @@ func (r *userRepository) Update(ctx context.Context, user *model.User) error {
 }
 
 // Delete 删除用户（软删除）
-func (r *userRepository) Delete(ctx context.Context, id uint) error {
+func (r *userRepository) Delete(ctx context.Context, id int64) error {
 	return config.DB.WithContext(ctx).Delete(&model.User{}, id).Error
 }

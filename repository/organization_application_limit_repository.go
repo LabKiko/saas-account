@@ -9,11 +9,11 @@ import (
 // OrganizationApplicationLimitRepository 组织应用限制仓库接口
 type OrganizationApplicationLimitRepository interface {
 	Create(ctx context.Context, limit *model.OrganizationApplicationLimit) error
-	GetByID(ctx context.Context, id uint) (*model.OrganizationApplicationLimit, error)
-	GetByApplicationID(ctx context.Context, appID uint) (*model.OrganizationApplicationLimit, error)
+	GetByID(ctx context.Context, id int64) (*model.OrganizationApplicationLimit, error)
+	GetByApplicationID(ctx context.Context, appID int64) (*model.OrganizationApplicationLimit, error)
 	List(ctx context.Context, page, pageSize int) ([]model.OrganizationApplicationLimit, int64, error)
 	Update(ctx context.Context, limit *model.OrganizationApplicationLimit) error
-	Delete(ctx context.Context, id uint) error
+	Delete(ctx context.Context, id int64) error
 }
 
 // organizationApplicationLimitRepository 组织应用限制仓库实现
@@ -30,7 +30,7 @@ func (r *organizationApplicationLimitRepository) Create(ctx context.Context, lim
 }
 
 // GetByID 根据ID获取组织应用限制
-func (r *organizationApplicationLimitRepository) GetByID(ctx context.Context, id uint) (*model.OrganizationApplicationLimit, error) {
+func (r *organizationApplicationLimitRepository) GetByID(ctx context.Context, id int64) (*model.OrganizationApplicationLimit, error) {
 	var limit model.OrganizationApplicationLimit
 	err := config.DB.WithContext(ctx).First(&limit, id).Error
 	if err != nil {
@@ -40,7 +40,7 @@ func (r *organizationApplicationLimitRepository) GetByID(ctx context.Context, id
 }
 
 // GetByApplicationID 根据应用ID获取组织应用限制
-func (r *organizationApplicationLimitRepository) GetByApplicationID(ctx context.Context, appID uint) (*model.OrganizationApplicationLimit, error) {
+func (r *organizationApplicationLimitRepository) GetByApplicationID(ctx context.Context, appID int64) (*model.OrganizationApplicationLimit, error) {
 	var limit model.OrganizationApplicationLimit
 	err := config.DB.WithContext(ctx).Where("application_id = ?", appID).First(&limit).Error
 	if err != nil {
@@ -77,6 +77,6 @@ func (r *organizationApplicationLimitRepository) Update(ctx context.Context, lim
 }
 
 // Delete 删除组织应用限制（软删除）
-func (r *organizationApplicationLimitRepository) Delete(ctx context.Context, id uint) error {
+func (r *organizationApplicationLimitRepository) Delete(ctx context.Context, id int64) error {
 	return config.DB.WithContext(ctx).Delete(&model.OrganizationApplicationLimit{}, id).Error
 }

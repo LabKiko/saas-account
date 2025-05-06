@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"saas-account/utils"
 	"strings"
@@ -10,13 +11,13 @@ import (
 
 // Auth 中间件，验证JWT令牌
 func Auth() app.HandlerFunc {
-	return func(ctx *app.RequestContext) {
+	return func(c context.Context, ctx *app.RequestContext) {
 		// 获取Authorization头
 		authHeader := string(ctx.Request.Header.Peek("Authorization"))
 		if authHeader == "" {
 			ctx.JSON(http.StatusUnauthorized, map[string]interface{}{
-				"code":    401,
-				"message": "Authorization header is required",
+				"code":       401,
+				"message":    "Authorization header is required",
 				"request_id": GetRequestID(ctx),
 			})
 			ctx.Abort()
@@ -27,8 +28,8 @@ func Auth() app.HandlerFunc {
 		parts := strings.SplitN(authHeader, " ", 2)
 		if !(len(parts) == 2 && parts[0] == "Bearer") {
 			ctx.JSON(http.StatusUnauthorized, map[string]interface{}{
-				"code":    401,
-				"message": "Authorization header format must be Bearer {token}",
+				"code":       401,
+				"message":    "Authorization header format must be Bearer {token}",
 				"request_id": GetRequestID(ctx),
 			})
 			ctx.Abort()
@@ -40,8 +41,8 @@ func Auth() app.HandlerFunc {
 		claims, err := utils.ParseToken(tokenString)
 		if err != nil {
 			ctx.JSON(http.StatusUnauthorized, map[string]interface{}{
-				"code":    401,
-				"message": "Invalid or expired token",
+				"code":       401,
+				"message":    "Invalid or expired token",
 				"request_id": GetRequestID(ctx),
 			})
 			ctx.Abort()
@@ -55,15 +56,15 @@ func Auth() app.HandlerFunc {
 		ctx.Set("role", claims.Role)
 
 		// 继续处理请求
-		ctx.Next(ctx)
+		ctx.Next(c)
 	}
 }
 
 // AdminAuth 中间件，验证用户是否为管理员
 func AdminAuth() app.HandlerFunc {
-	return func(ctx *app.RequestContext) {
+	return func(c context.Context, ctx *app.RequestContext) {
 		// 先执行Auth中间件
-		Auth()(ctx)
+		Auth()(c, ctx)
 		if ctx.IsAborted() {
 			return
 		}
@@ -72,8 +73,8 @@ func AdminAuth() app.HandlerFunc {
 		role, exists := ctx.Get("role")
 		if !exists || role.(string) != "admin" {
 			ctx.JSON(http.StatusForbidden, map[string]interface{}{
-				"code":    403,
-				"message": "Admin access required",
+				"code":       403,
+				"message":    "Admin access required",
 				"request_id": GetRequestID(ctx),
 			})
 			ctx.Abort()
@@ -81,6 +82,6 @@ func AdminAuth() app.HandlerFunc {
 		}
 
 		// 继续处理请求
-		ctx.Next(ctx)
+		ctx.Next(c)
 	}
 }

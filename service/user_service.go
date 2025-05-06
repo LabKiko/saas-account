@@ -5,6 +5,7 @@ import (
 	"errors"
 	"saas-account/model"
 	"saas-account/repository"
+	"saas-account/utils"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -62,7 +63,7 @@ func (s *userService) Create(ctx context.Context, user *model.User) error {
 		user.Status = "active"
 	}
 
-	user.ID =
+	user.ID = utils.GenerateID()
 
 	// 创建用户
 	return s.userRepo.Create(ctx, user)
